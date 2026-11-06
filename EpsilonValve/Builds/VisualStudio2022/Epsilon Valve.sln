@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio Version 17
+
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Valve - Standalone Plugin", "Epsilon Valve_StandalonePlugin.vcxproj", "{E3EE00CD-16F1-735D-B69A-7F988ABAC7AA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{894574EB-9ADB-CDEC-C07A-F2BCBD59CEFC} = {894574EB-9ADB-CDEC-C07A-F2BCBD59CEFC}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Valve - VST3", "Epsilon Valve_VST3.vcxproj", "{CB3CBDE9-03D2-9786-D95A-9BF699881DC6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{894574EB-9ADB-CDEC-C07A-F2BCBD59CEFC} = {894574EB-9ADB-CDEC-C07A-F2BCBD59CEFC}
+		{F5EDAAA9-2FE6-D448-20C2-7C3B192354F3} = {F5EDAAA9-2FE6-D448-20C2-7C3B192354F3}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Valve - Shared Code", "Epsilon Valve_SharedCode.vcxproj", "{894574EB-9ADB-CDEC-C07A-F2BCBD59CEFC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Valve - VST3 Manifest Helper", "Epsilon Valve_VST3ManifestHelper.vcxproj", "{F5EDAAA9-2FE6-D448-20C2-7C3B192354F3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CB3CBDE9-03D2-9786-D95A-9BF699881DC6}.Debug|x64.ActiveCfg = Debug|x64
+		{CB3CBDE9-03D2-9786-D95A-9BF699881DC6}.Debug|x64.Build.0 = Debug|x64
+		{CB3CBDE9-03D2-9786-D95A-9BF699881DC6}.Release|x64.ActiveCfg = Release|x64
+		{CB3CBDE9-03D2-9786-D95A-9BF699881DC6}.Release|x64.Build.0 = Release|x64
+		{E3EE00CD-16F1-735D-B69A-7F988ABAC7AA}.Debug|x64.ActiveCfg = Debug|x64
+		{E3EE00CD-16F1-735D-B69A-7F988ABAC7AA}.Debug|x64.Build.0 = Debug|x64
+		{E3EE00CD-16F1-735D-B69A-7F988ABAC7AA}.Release|x64.ActiveCfg = Release|x64
+		{E3EE00CD-16F1-735D-B69A-7F988ABAC7AA}.Release|x64.Build.0 = Release|x64
+		{894574EB-9ADB-CDEC-C07A-F2BCBD59CEFC}.Debug|x64.ActiveCfg = Debug|x64
+		{894574EB-9ADB-CDEC-C07A-F2BCBD59CEFC}.Debug|x64.Build.0 = Debug|x64
+		{894574EB-9ADB-CDEC-C07A-F2BCBD59CEFC}.Release|x64.ActiveCfg = Release|x64
+		{894574EB-9ADB-CDEC-C07A-F2BCBD59CEFC}.Release|x64.Build.0 = Release|x64
+		{F5EDAAA9-2FE6-D448-20C2-7C3B192354F3}.Debug|x64.ActiveCfg = Debug|Win32
+		{F5EDAAA9-2FE6-D448-20C2-7C3B192354F3}.Debug|x64.Build.0 = Debug|Win32
+		{F5EDAAA9-2FE6-D448-20C2-7C3B192354F3}.Release|x64.ActiveCfg = Release|Win32
+		{F5EDAAA9-2FE6-D448-20C2-7C3B192354F3}.Release|x64.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

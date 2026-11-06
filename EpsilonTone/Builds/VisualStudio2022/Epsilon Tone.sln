@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio Version 17
+
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Tone - Standalone Plugin", "Epsilon Tone_StandalonePlugin.vcxproj", "{CC0FC567-45F3-C5AE-8F94-5E854837203D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{192B1AB4-E0FD-7FF9-7098-4829559A73AF} = {192B1AB4-E0FD-7FF9-7098-4829559A73AF}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Tone - VST3", "Epsilon Tone_VST3.vcxproj", "{F61B420F-AABB-E57B-7C5F-77738E3D99EC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{192B1AB4-E0FD-7FF9-7098-4829559A73AF} = {192B1AB4-E0FD-7FF9-7098-4829559A73AF}
+		{41CCB9AA-84EF-9C5A-CCA7-01E6915A6F89} = {41CCB9AA-84EF-9C5A-CCA7-01E6915A6F89}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Tone - Shared Code", "Epsilon Tone_SharedCode.vcxproj", "{192B1AB4-E0FD-7FF9-7098-4829559A73AF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Tone - VST3 Manifest Helper", "Epsilon Tone_VST3ManifestHelper.vcxproj", "{41CCB9AA-84EF-9C5A-CCA7-01E6915A6F89}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F61B420F-AABB-E57B-7C5F-77738E3D99EC}.Debug|x64.ActiveCfg = Debug|x64
+		{F61B420F-AABB-E57B-7C5F-77738E3D99EC}.Debug|x64.Build.0 = Debug|x64
+		{F61B420F-AABB-E57B-7C5F-77738E3D99EC}.Release|x64.ActiveCfg = Release|x64
+		{F61B420F-AABB-E57B-7C5F-77738E3D99EC}.Release|x64.Build.0 = Release|x64
+		{CC0FC567-45F3-C5AE-8F94-5E854837203D}.Debug|x64.ActiveCfg = Debug|x64
+		{CC0FC567-45F3-C5AE-8F94-5E854837203D}.Debug|x64.Build.0 = Debug|x64
+		{CC0FC567-45F3-C5AE-8F94-5E854837203D}.Release|x64.ActiveCfg = Release|x64
+		{CC0FC567-45F3-C5AE-8F94-5E854837203D}.Release|x64.Build.0 = Release|x64
+		{192B1AB4-E0FD-7FF9-7098-4829559A73AF}.Debug|x64.ActiveCfg = Debug|x64
+		{192B1AB4-E0FD-7FF9-7098-4829559A73AF}.Debug|x64.Build.0 = Debug|x64
+		{192B1AB4-E0FD-7FF9-7098-4829559A73AF}.Release|x64.ActiveCfg = Release|x64
+		{192B1AB4-E0FD-7FF9-7098-4829559A73AF}.Release|x64.Build.0 = Release|x64
+		{41CCB9AA-84EF-9C5A-CCA7-01E6915A6F89}.Debug|x64.ActiveCfg = Debug|Win32
+		{41CCB9AA-84EF-9C5A-CCA7-01E6915A6F89}.Debug|x64.Build.0 = Debug|Win32
+		{41CCB9AA-84EF-9C5A-CCA7-01E6915A6F89}.Release|x64.ActiveCfg = Release|Win32
+		{41CCB9AA-84EF-9C5A-CCA7-01E6915A6F89}.Release|x64.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

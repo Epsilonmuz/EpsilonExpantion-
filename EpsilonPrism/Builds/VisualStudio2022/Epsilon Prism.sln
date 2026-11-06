@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio Version 17
+
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Prism - Standalone Plugin", "Epsilon Prism_StandalonePlugin.vcxproj", "{353F7C67-AB94-F10F-C739-1D889D91C964}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C8E124FB-4486-E93F-DFDB-9903BC1A451A} = {C8E124FB-4486-E93F-DFDB-9903BC1A451A}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Prism - VST3", "Epsilon Prism_VST3.vcxproj", "{7A37A815-C53B-BBBF-7133-447B08B9188F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C8E124FB-4486-E93F-DFDB-9903BC1A451A} = {C8E124FB-4486-E93F-DFDB-9903BC1A451A}
+		{346940B3-783C-62EA-D76C-D374486C4D6D} = {346940B3-783C-62EA-D76C-D374486C4D6D}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Prism - Shared Code", "Epsilon Prism_SharedCode.vcxproj", "{C8E124FB-4486-E93F-DFDB-9903BC1A451A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Prism - VST3 Manifest Helper", "Epsilon Prism_VST3ManifestHelper.vcxproj", "{346940B3-783C-62EA-D76C-D374486C4D6D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7A37A815-C53B-BBBF-7133-447B08B9188F}.Debug|x64.ActiveCfg = Debug|x64
+		{7A37A815-C53B-BBBF-7133-447B08B9188F}.Debug|x64.Build.0 = Debug|x64
+		{7A37A815-C53B-BBBF-7133-447B08B9188F}.Release|x64.ActiveCfg = Release|x64
+		{7A37A815-C53B-BBBF-7133-447B08B9188F}.Release|x64.Build.0 = Release|x64
+		{353F7C67-AB94-F10F-C739-1D889D91C964}.Debug|x64.ActiveCfg = Debug|x64
+		{353F7C67-AB94-F10F-C739-1D889D91C964}.Debug|x64.Build.0 = Debug|x64
+		{353F7C67-AB94-F10F-C739-1D889D91C964}.Release|x64.ActiveCfg = Release|x64
+		{353F7C67-AB94-F10F-C739-1D889D91C964}.Release|x64.Build.0 = Release|x64
+		{C8E124FB-4486-E93F-DFDB-9903BC1A451A}.Debug|x64.ActiveCfg = Debug|x64
+		{C8E124FB-4486-E93F-DFDB-9903BC1A451A}.Debug|x64.Build.0 = Debug|x64
+		{C8E124FB-4486-E93F-DFDB-9903BC1A451A}.Release|x64.ActiveCfg = Release|x64
+		{C8E124FB-4486-E93F-DFDB-9903BC1A451A}.Release|x64.Build.0 = Release|x64
+		{346940B3-783C-62EA-D76C-D374486C4D6D}.Debug|x64.ActiveCfg = Debug|Win32
+		{346940B3-783C-62EA-D76C-D374486C4D6D}.Debug|x64.Build.0 = Debug|Win32
+		{346940B3-783C-62EA-D76C-D374486C4D6D}.Release|x64.ActiveCfg = Release|Win32
+		{346940B3-783C-62EA-D76C-D374486C4D6D}.Release|x64.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

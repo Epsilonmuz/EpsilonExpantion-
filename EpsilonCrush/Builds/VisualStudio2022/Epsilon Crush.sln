@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio Version 17
+
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Crush - Standalone Plugin", "Epsilon Crush_StandalonePlugin.vcxproj", "{3470019E-2FDE-AA20-0166-9E09564A0B03}"
+	ProjectSection(ProjectDependencies) = postProject
+		{82B531BB-95E4-7163-ADFC-5937A55A788D} = {82B531BB-95E4-7163-ADFC-5937A55A788D}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Crush - VST3", "Epsilon Crush_VST3.vcxproj", "{47BF6E83-6403-5DE5-7B74-ED1BB1C6232F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{82B531BB-95E4-7163-ADFC-5937A55A788D} = {82B531BB-95E4-7163-ADFC-5937A55A788D}
+		{31589D5B-1672-7263-A86E-FDE91D4EB6A1} = {31589D5B-1672-7263-A86E-FDE91D4EB6A1}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Crush - Shared Code", "Epsilon Crush_SharedCode.vcxproj", "{82B531BB-95E4-7163-ADFC-5937A55A788D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Crush - VST3 Manifest Helper", "Epsilon Crush_VST3ManifestHelper.vcxproj", "{31589D5B-1672-7263-A86E-FDE91D4EB6A1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{47BF6E83-6403-5DE5-7B74-ED1BB1C6232F}.Debug|x64.ActiveCfg = Debug|x64
+		{47BF6E83-6403-5DE5-7B74-ED1BB1C6232F}.Debug|x64.Build.0 = Debug|x64
+		{47BF6E83-6403-5DE5-7B74-ED1BB1C6232F}.Release|x64.ActiveCfg = Release|x64
+		{47BF6E83-6403-5DE5-7B74-ED1BB1C6232F}.Release|x64.Build.0 = Release|x64
+		{3470019E-2FDE-AA20-0166-9E09564A0B03}.Debug|x64.ActiveCfg = Debug|x64
+		{3470019E-2FDE-AA20-0166-9E09564A0B03}.Debug|x64.Build.0 = Debug|x64
+		{3470019E-2FDE-AA20-0166-9E09564A0B03}.Release|x64.ActiveCfg = Release|x64
+		{3470019E-2FDE-AA20-0166-9E09564A0B03}.Release|x64.Build.0 = Release|x64
+		{82B531BB-95E4-7163-ADFC-5937A55A788D}.Debug|x64.ActiveCfg = Debug|x64
+		{82B531BB-95E4-7163-ADFC-5937A55A788D}.Debug|x64.Build.0 = Debug|x64
+		{82B531BB-95E4-7163-ADFC-5937A55A788D}.Release|x64.ActiveCfg = Release|x64
+		{82B531BB-95E4-7163-ADFC-5937A55A788D}.Release|x64.Build.0 = Release|x64
+		{31589D5B-1672-7263-A86E-FDE91D4EB6A1}.Debug|x64.ActiveCfg = Debug|Win32
+		{31589D5B-1672-7263-A86E-FDE91D4EB6A1}.Debug|x64.Build.0 = Debug|Win32
+		{31589D5B-1672-7263-A86E-FDE91D4EB6A1}.Release|x64.ActiveCfg = Release|Win32
+		{31589D5B-1672-7263-A86E-FDE91D4EB6A1}.Release|x64.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

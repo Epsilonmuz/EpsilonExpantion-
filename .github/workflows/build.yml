@@ -1,0 +1,65 @@
+# Builds all nine Epsilon plugins on a Mac on every push, checks them with pluginval,
+# and offers the finished VST3 / AU / Standalone as downloads (Actions tab > latest run > Artifacts).
+name: Build macOS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  dsp-tests:
+    # Engine checks with clang and fused multiply-add (the same maths Apple Silicon uses)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: DSP suite at 44.1 / 48 / 96 kHz and automation fuzz
+        run: |
+          clang++ -O3 -std=c++17 -march=haswell -ISource Tests/suite.cpp -o suite
+          ./suite 48000 && ./suite 44100 && ./suite 96000
+          clang++ -O3 -std=c++17 -march=haswell -ISource Tests/fuzz.cpp -o fuzz && ./fuzz
+
+  mac:
+    needs: dsp-tests
+    runs-on: macos-15
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        effect: [Heat, Valve, Crush, Prism, Time, Plate, Space, Tone, Voice]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Epsilon ${{ matrix.effect }} (Projucer Xcode project, Release, Universal)
+        run: |
+          xcodebuild -project "Epsilon${{ matrix.effect }}/Builds/MacOSX/Epsilon ${{ matrix.effect }}.xcodeproj" \
+                     -target "Epsilon ${{ matrix.effect }} - All" -configuration Release \
+                     ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO CODE_SIGN_IDENTITY="-" -quiet build
+
+      - name: Validate with pluginval
+        run: |
+          curl -sSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          unzip -q pluginval.zip
+          ./pluginval.app/Contents/MacOS/pluginval --strictness-level 8 --skip-gui-tests \
+            --validate "Epsilon${{ matrix.effect }}/Builds/MacOSX/build/Release/Epsilon ${{ matrix.effect }}.vst3"
+
+      - name: Package
+        run: |
+          N="Epsilon ${{ matrix.effect }}"
+          B="Epsilon${{ matrix.effect }}/Builds/MacOSX/build/Release"
+          mkdir -p dist
+          cp -R "$B/$N.vst3" "$B/$N.component" "$B/$N.app" dist/
+          for f in dist/*.vst3/Contents/MacOS/* dist/*.component/Contents/MacOS/*; do lipo -archs "$f"; done || true
+          cat > dist/INSTALL.txt <<TXT
+          1. Copy "$N.vst3" to ~/Library/Audio/Plug-Ins/VST3/
+          2. Copy "$N.component" to ~/Library/Audio/Plug-Ins/Components/
+          3. These builds are not signed with an Apple developer certificate, so run once in Terminal:
+             xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/"$N.vst3" ~/Library/Audio/Plug-Ins/Components/"$N.component"
+          4. Rescan plugins in your DAW.
+          TXT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Epsilon${{ matrix.effect }}-macOS
+          path: dist
+          retention-days: 30

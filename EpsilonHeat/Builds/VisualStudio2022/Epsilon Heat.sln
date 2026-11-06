@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio Version 17
+
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Heat - Standalone Plugin", "Epsilon Heat_StandalonePlugin.vcxproj", "{CFBA2B49-4DB2-2BAE-87DB-6E0133A954A7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{85E2BC6E-BCD1-142C-FD60-FA7F9EB16830} = {85E2BC6E-BCD1-142C-FD60-FA7F9EB16830}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Heat - VST3", "Epsilon Heat_VST3.vcxproj", "{1C06C2D2-D3E1-4B30-85D8-E43C0C198759}"
+	ProjectSection(ProjectDependencies) = postProject
+		{85E2BC6E-BCD1-142C-FD60-FA7F9EB16830} = {85E2BC6E-BCD1-142C-FD60-FA7F9EB16830}
+		{7373DDDA-05A8-3E6B-DB67-6AEF81CEF062} = {7373DDDA-05A8-3E6B-DB67-6AEF81CEF062}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Heat - Shared Code", "Epsilon Heat_SharedCode.vcxproj", "{85E2BC6E-BCD1-142C-FD60-FA7F9EB16830}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Epsilon Heat - VST3 Manifest Helper", "Epsilon Heat_VST3ManifestHelper.vcxproj", "{7373DDDA-05A8-3E6B-DB67-6AEF81CEF062}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C06C2D2-D3E1-4B30-85D8-E43C0C198759}.Debug|x64.ActiveCfg = Debug|x64
+		{1C06C2D2-D3E1-4B30-85D8-E43C0C198759}.Debug|x64.Build.0 = Debug|x64
+		{1C06C2D2-D3E1-4B30-85D8-E43C0C198759}.Release|x64.ActiveCfg = Release|x64
+		{1C06C2D2-D3E1-4B30-85D8-E43C0C198759}.Release|x64.Build.0 = Release|x64
+		{CFBA2B49-4DB2-2BAE-87DB-6E0133A954A7}.Debug|x64.ActiveCfg = Debug|x64
+		{CFBA2B49-4DB2-2BAE-87DB-6E0133A954A7}.Debug|x64.Build.0 = Debug|x64
+		{CFBA2B49-4DB2-2BAE-87DB-6E0133A954A7}.Release|x64.ActiveCfg = Release|x64
+		{CFBA2B49-4DB2-2BAE-87DB-6E0133A954A7}.Release|x64.Build.0 = Release|x64
+		{85E2BC6E-BCD1-142C-FD60-FA7F9EB16830}.Debug|x64.ActiveCfg = Debug|x64
+		{85E2BC6E-BCD1-142C-FD60-FA7F9EB16830}.Debug|x64.Build.0 = Debug|x64
+		{85E2BC6E-BCD1-142C-FD60-FA7F9EB16830}.Release|x64.ActiveCfg = Release|x64
+		{85E2BC6E-BCD1-142C-FD60-FA7F9EB16830}.Release|x64.Build.0 = Release|x64
+		{7373DDDA-05A8-3E6B-DB67-6AEF81CEF062}.Debug|x64.ActiveCfg = Debug|Win32
+		{7373DDDA-05A8-3E6B-DB67-6AEF81CEF062}.Debug|x64.Build.0 = Debug|Win32
+		{7373DDDA-05A8-3E6B-DB67-6AEF81CEF062}.Release|x64.ActiveCfg = Release|Win32
+		{7373DDDA-05A8-3E6B-DB67-6AEF81CEF062}.Release|x64.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

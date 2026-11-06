@@ -1,0 +1,125 @@
+#pragma once
+// Epsilon UI kit: faceplate drawing, knobs, LED switches, segmented selectors, meters.
+#include <juce_audio_processors/juce_audio_processors.h>
+#include "Theme.h"
+
+namespace eps::ui {
+
+// ------------------------------------------------------------------ drawing helpers
+namespace draw {
+void faceplate (juce::Graphics&, juce::Rectangle<float>, const Theme&, float scale);
+void recess (juce::Graphics&, juce::Rectangle<float>, const Theme&, float radius, float scale);   // engraved panel
+void glass (juce::Graphics&, juce::Rectangle<float>, const Theme&, float radius, float scale);    // display screen
+void screw (juce::Graphics&, juce::Point<float>, float r, float angle);
+void engraved (juce::Graphics&, const juce::String&, juce::Rectangle<float>, juce::Justification, const juce::Font&, juce::Colour);
+void glowStroke (juce::Graphics&, const juce::Path&, juce::Colour, float width, float glow);
+}
+
+// ------------------------------------------------------------------ look and feel
+class LookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    explicit LookAndFeel (const Theme& t);
+    Theme theme;
+    float scale = 1.0f;
+    void drawRotarySlider (juce::Graphics&, int x, int y, int w, int h, float pos, float start, float end, juce::Slider&) override;
+    void drawPopupMenuBackground (juce::Graphics&, int w, int h) override;
+    void drawPopupMenuItem (juce::Graphics&, const juce::Rectangle<int>&, bool sep, bool active, bool highlighted, bool ticked, bool sub,
+                            const juce::String& text, const juce::String& shortcut, const juce::Drawable* icon, const juce::Colour* colour) override;
+    juce::Font getPopupMenuFont() override { return font (14.0f * scale); }
+    void drawTooltip (juce::Graphics&, const juce::String&, int w, int h) override;
+    juce::Rectangle<int> getTooltipBounds (const juce::String&, juce::Point<int>, juce::Rectangle<int>) override;
+};
+
+// ------------------------------------------------------------------ knob
+class Knob : public juce::Component, private juce::Slider::Listener
+{
+public:
+    enum Size { Small, Medium, Large, Hero };
+    Knob (juce::AudioProcessorValueTreeState&, const juce::String& paramId, const juce::String& label, Size, const juce::String& tip, bool bipolar = false);
+    ~Knob() override;
+    void resized() override;
+    void paint (juce::Graphics&) override;
+    juce::Slider slider;
+    Size size;
+    float scale = 1.0f;
+    juce::String label;
+private:
+    void sliderValueChanged (juce::Slider*) override { repaint(); }
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attachment;
+    juce::RangedAudioParameter* param = nullptr;
+    int labelH() const; int valueH() const;
+};
+
+// ------------------------------------------------------------------ LED push switch (two-state parameter)
+class LedSwitch : public juce::Button
+{
+public:
+    LedSwitch (juce::AudioProcessorValueTreeState&, const juce::String& paramId, const juce::String& label, const Theme&, const juce::String& tip);
+    void paintButton (juce::Graphics&, bool over, bool down) override;
+    float scale = 1.0f;
+private:
+    Theme theme;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> attachment;
+};
+
+// ------------------------------------------------------------------ segmented selector (choice parameter)
+class Segmented : public juce::Component, public juce::SettableTooltipClient
+{
+public:
+    Segmented (juce::AudioProcessorValueTreeState&, const juce::String& paramId, const Theme&, const juce::String& tip, const juce::StringArray& labels = {});
+    void paint (juce::Graphics&) override;
+    void mouseDown (const juce::MouseEvent&) override;
+    void mouseMove (const juce::MouseEvent&) override;
+    void mouseExit (const juce::MouseEvent&) override;
+    float scale = 1.0f;
+    juce::String caption;
+private:
+    int indexAt (juce::Point<float>) const;
+    Theme theme;
+    juce::StringArray names;
+    juce::RangedAudioParameter* param = nullptr;
+    std::unique_ptr<juce::ParameterAttachment> attachment;
+    int current = 0, hover = -1;
+};
+
+// ------------------------------------------------------------------ meters
+class LedMeter : public juce::Component
+{
+public:
+    explicit LedMeter (const juce::String& label, const Theme& t) : text (label), theme (t) {}
+    void push (float linearPeak);
+    void paint (juce::Graphics&) override;
+    float scale = 1.0f;
+private:
+    juce::String text; Theme theme;
+    float level = -60, hold = -60; int holdTicks = 0;
+};
+
+// Analog needle meter. Values in dB; 'reverse' makes it a gain-reduction meter (needle falls to the left).
+class NeedleMeter : public juce::Component
+{
+public:
+    NeedleMeter (const juce::String& label, const Theme& t, float minDb, float maxDb, bool reverse, bool creamFace)
+        : text (label), theme (t), lo (minDb), hi (maxDb), rev (reverse), cream (creamFace) {}
+    void push (float db);
+    void paint (juce::Graphics&) override;
+    float scale = 1.0f;
+private:
+    juce::String text; Theme theme; float lo, hi; bool rev, cream;
+    float shown = -60, velocity = 0;
+    float angleFor (float db) const;
+};
+
+// ------------------------------------------------------------------ small text button (header)
+class PillButton : public juce::Button
+{
+public:
+    PillButton (const juce::String& text, const Theme& t) : juce::Button (text), theme (t) {}
+    void paintButton (juce::Graphics&, bool over, bool down) override;
+    float scale = 1.0f;
+    bool glyphDice = false, glyphPower = false, glyphArrowLeft = false, glyphArrowRight = false;
+private:
+    Theme theme;
+};
+}
