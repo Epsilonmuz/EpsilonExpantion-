@@ -19,7 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Machine
-        run: echo "### ${{ matrix.runner }}: $(sysctl -n machdep.cpu.brand_string), $(sysctl -n hw.ncpu) cores" | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "### ${{ matrix.runner }} - $(sysctl -n machdep.cpu.brand_string), $(sysctl -n hw.ncpu) cores" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Voice latency and CPU
         run: |
           clang++ -O3 -std=c++17 -ISource Tests/voice_bench.cpp -o voice_bench
