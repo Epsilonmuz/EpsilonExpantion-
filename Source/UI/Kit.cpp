@@ -417,7 +417,8 @@ void NeedleMeter::push (float db)
     // ballistics: a damped mass-spring, like a real VU movement
     const float force = (db - shown) * 0.14f - velocity * 0.45f;
     velocity += force; shown += velocity;
-    repaint();
+    const float a = angleFor (shown);
+    if (std::abs (a - drawnAngle) > 0.0005f) repaint();      // a resting needle costs nothing
 }
 float NeedleMeter::angleFor (float db) const
 {
@@ -425,58 +426,79 @@ float NeedleMeter::angleFor (float db) const
     const float u = rev ? 1.0f - t : t;
     return -0.85f + 1.7f * u;   // radians from vertical
 }
-void NeedleMeter::paint (Graphics& g)
+void NeedleMeter::resized() { cacheScale = 0.0f; }
+
+// The face (scale, numbers, lamp glow) and the glass (reflection, bezel) never change, so they are
+// drawn once into bitmaps at the screen's pixel density; each frame only the needle is drawn.
+void NeedleMeter::renderCache (float px)
 {
+    cacheScale = px;
+    const int W = jmax (1, roundToInt ((float) getWidth() * px)), H = jmax (1, roundToInt ((float) getHeight() * px));
+    faceImage = Image (Image::ARGB, W, H, true);
+    glassImage = Image (Image::ARGB, W, H, true);
     const float s = scale;
     auto r = getLocalBounds().toFloat();
-    // face
     Path face; face.addRoundedRectangle (r, 8 * s);
-    if (cream)
     {
-        ColourGradient fg (Colour (0xfff3e3bd), r.getCentreX(), r.getY(), Colour (0xffd9be86), r.getCentreX(), r.getBottom(), false);
-        g.setGradientFill (fg);
+        Graphics g (faceImage);
+        g.addTransform (AffineTransform::scale (px));
+        if (cream)
+            g.setGradientFill (ColourGradient (Colour (0xfff3e3bd), r.getCentreX(), r.getY(), Colour (0xffd9be86), r.getCentreX(), r.getBottom(), false));
+        else
+            g.setGradientFill (ColourGradient (Colour (0xff1d1c1b), r.getCentreX(), r.getY(), Colour (0xff0b0a0a), r.getCentreX(), r.getBottom(), false));
+        g.fillPath (face);
+        ColourGradient lamp (theme.accent.withAlpha (cream ? 0.18f : 0.16f), r.getCentreX(), r.getBottom(), Colours::transparentBlack, r.getCentreX(), r.getY(), true);
+        g.setGradientFill (lamp); g.fillPath (face);
+        const Colour ink = cream ? Colour (0xff2a2116) : theme.inkDim;
+        const auto pivot = Point<float> (r.getCentreX(), r.getBottom() + r.getHeight() * 0.18f);
+        const float R = r.getHeight() * 0.98f;
+        Path arc; arc.addCentredArc (pivot.x, pivot.y, R * 0.82f, R * 0.82f, 0, -0.85f, 0.85f, true);
+        g.setColour (ink.withAlpha (0.8f)); g.strokePath (arc, PathStrokeType (1.2f * s));
+        const float redFrom = rev ? lo + (hi - lo) * 0.7f : hi - (hi - lo) * 0.18f;
+        Path red; red.addCentredArc (pivot.x, pivot.y, R * 0.80f, R * 0.80f, 0, jmin (angleFor (redFrom), angleFor (hi)), jmax (angleFor (redFrom), angleFor (hi)), true);
+        g.setColour (Colour (0xffd6332b).withAlpha (0.9f)); g.strokePath (red, PathStrokeType (3.5f * s));
+        g.setFont (font (9.5f * s, true));
+        for (int i = 0; i <= 6; ++i)
+        {
+            const float db = lo + (hi - lo) * float (i) / 6.0f, a = angleFor (db);
+            g.setColour (ink);
+            g.drawLine (Line<float> (pivot.getPointOnCircumference (R * 0.82f, a), pivot.getPointOnCircumference (R * 0.88f, a)), 1.2f * s);
+            const auto tp = pivot.getPointOnCircumference (R * 0.96f, a);
+            g.drawText (String (roundToInt (std::abs (db))), Rectangle<float> (tp.x - 14 * s, tp.y - 7 * s, 28 * s, 14 * s), Justification::centred);
+        }
+        g.setFont (font (11.0f * s, true, 0.2f));
+        g.setColour (ink.withAlpha (0.9f));
+        g.drawText (text, r.withTrimmedTop (r.getHeight() * 0.52f).withHeight (16 * s), Justification::centred);
     }
-    else
     {
-        ColourGradient fg (Colour (0xff1d1c1b), r.getCentreX(), r.getY(), Colour (0xff0b0a0a), r.getCentreX(), r.getBottom(), false);
-        g.setGradientFill (fg);
+        Graphics g (glassImage);
+        g.addTransform (AffineTransform::scale (px));
+        ColourGradient refl (Colours::white.withAlpha (0.12f), r.getX(), r.getY(), Colours::transparentWhite, r.getX(), r.getCentreY(), false);
+        g.setGradientFill (refl); g.fillPath (face);
+        g.setColour (Colours::black.withAlpha (0.8f)); g.strokePath (face, PathStrokeType (2.0f * s));
     }
-    g.fillPath (face);
-    ColourGradient lamp (theme.accent.withAlpha (cream ? 0.18f : 0.16f), r.getCentreX(), r.getBottom(), Colours::transparentBlack, r.getCentreX(), r.getY(), true);
-    g.setGradientFill (lamp); g.fillPath (face);
-    const Colour ink = cream ? Colour (0xff2a2116) : theme.inkDim;
+}
+
+void NeedleMeter::paint (Graphics& g)
+{
+    const float px = jmax (1.0f, g.getInternalContext().getPhysicalPixelScaleFactor());
+    if (std::abs (px - cacheScale) > 0.01f || ! faceImage.isValid()) renderCache (px);
+    const auto r = getLocalBounds().toFloat();
+    g.setImageResamplingQuality (Graphics::lowResamplingQuality);
+    g.drawImage (faceImage, r);
+    const float s = scale;
     const auto pivot = Point<float> (r.getCentreX(), r.getBottom() + r.getHeight() * 0.18f);
     const float R = r.getHeight() * 0.98f;
-    // scale arc and ticks
-    Path arc; arc.addCentredArc (pivot.x, pivot.y, R * 0.82f, R * 0.82f, 0, -0.85f, 0.85f, true);
-    g.setColour (ink.withAlpha (0.8f)); g.strokePath (arc, PathStrokeType (1.2f * s));
-    const float redFrom = rev ? lo + (hi - lo) * 0.7f : hi - (hi - lo) * 0.18f;
-    Path red; red.addCentredArc (pivot.x, pivot.y, R * 0.80f, R * 0.80f, 0, jmin (angleFor (redFrom), angleFor (rev ? hi : hi)), jmax (angleFor (redFrom), angleFor (hi)), true);
-    g.setColour (Colour (0xffd6332b).withAlpha (0.9f)); g.strokePath (red, PathStrokeType (3.5f * s));
-    g.setFont (font (9.5f * s, true));
-    for (int i = 0; i <= 6; ++i)
-    {
-        const float db = lo + (hi - lo) * float (i) / 6.0f, a = angleFor (db);
-        g.setColour (ink);
-        g.drawLine (Line<float> (pivot.getPointOnCircumference (R * 0.82f, a), pivot.getPointOnCircumference (R * 0.88f, a)), 1.2f * s);
-        const auto tp = pivot.getPointOnCircumference (R * 0.96f, a);
-        g.drawText (String (roundToInt (std::abs (db))), Rectangle<float> (tp.x - 14 * s, tp.y - 7 * s, 28 * s, 14 * s), Justification::centred);
-    }
-    g.setFont (font (11.0f * s, true, 0.2f));
-    g.setColour (ink.withAlpha (0.9f));
-    g.drawText (text, r.withTrimmedTop (r.getHeight() * 0.52f).withHeight (16 * s), Justification::centred);
-    // needle with shadow
     const float a = angleFor (shown);
+    drawnAngle = a;
     const auto tip = pivot.getPointOnCircumference (R * 0.9f, a), base = pivot.getPointOnCircumference (R * 0.25f, a);
     {
-        Graphics::ScopedSaveState ss (g); g.reduceClipRegion (face);
+        Graphics::ScopedSaveState ss (g);
+        g.reduceClipRegion (r.reduced (2 * s).toNearestInt());   // the needle base sits below the face: keep it inside
         g.setColour (Colours::black.withAlpha (0.25f)); g.drawLine (Line<float> (base.translated (3 * s, 3 * s), tip.translated (3 * s, 3 * s)), 2.0f * s);
         g.setColour (cream ? Colour (0xff1b1712) : theme.accent); g.drawLine (Line<float> (base, tip), 1.6f * s);
     }
-    // glass reflection and bezel
-    ColourGradient refl (Colours::white.withAlpha (0.12f), r.getX(), r.getY(), Colours::transparentWhite, r.getX(), r.getCentreY(), false);
-    g.setGradientFill (refl); g.fillPath (face);
-    g.setColour (Colours::black.withAlpha (0.8f)); g.strokePath (face, PathStrokeType (2.0f * s));
+    g.drawImage (glassImage, r);
 }
 
 // ================================================================== header pill button

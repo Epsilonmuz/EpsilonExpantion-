@@ -1,5 +1,5 @@
 // Epsilon editors: main-thread cost of one 30 fps frame at Retina scale (timer work + redrawing
-// the parts that animate), with the system renderer and with the software-rendered cache.
+// the parts that animate, as macOS asks for it), with the system renderer and with the software-rendered cache.
 #include "PluginEditor.h"
 #include <chrono>
 #include <cstdio>
@@ -42,15 +42,15 @@ int main()
                 ed.refreshForSnapshot (1);
                 for (auto* c : ed.animatedParts()) if (c && c->isVisible()) if (auto* cache = ed.getCachedComponentImage()) cache->invalidate (c->getBoundsInParent());   // what repaint() does in a window
                 {
+                    // macOS merges the dirty rectangles of one window into one area (forum.juce.com
+                    // "setNeedsDisplayInRect broken on Sonoma"), so the window is asked to redraw the
+                    // bounding box of everything that changed: from the display down to the meters.
+                    juce::Rectangle<int> area;
+                    for (auto* c : ed.animatedParts()) if (c && c->isVisible()) area = area.isEmpty() ? c->getBoundsInParent() : area.getUnion (c->getBoundsInParent());
                     juce::Graphics g (target);
                     g.addTransform (juce::AffineTransform::scale (2.0f));
-                    for (auto* c : ed.animatedParts())
-                        if (c && c->isVisible())
-                        {
-                            juce::Graphics::ScopedSaveState ss (g);
-                            g.reduceClipRegion (c->getBoundsInParent());
-                            if (auto* cache = ed.getCachedComponentImage()) cache->paint (g); else ed.paintEntireComponent (g, true);
-                        }
+                    g.reduceClipRegion (area);
+                    if (auto* cache = ed.getCachedComponentImage()) cache->paint (g); else ed.paintEntireComponent (g, true);
                 }
                 if (f >= 20) { total += std::chrono::duration<double, std::milli> (Clock::now() - t0).count(); ++frames; }
             }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="wXoIIX" name="Epsilon Valve" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" version="0.2.0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" version="0.3.0"
               companyName="Epsilon Sounds" companyCopyright="Edison" bundleIdentifier="com.epsilonsounds.expansion.valve"
               pluginFormats="buildAU,buildStandalone,buildVST3" pluginCharacteristicsValue=""
               pluginName="Epsilon Valve" pluginDesc="Twin-stage tube preamp" pluginManufacturer="Epsilon Sounds"

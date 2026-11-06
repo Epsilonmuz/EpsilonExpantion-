@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="ttOofL" name="Epsilon Time" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" version="0.2.0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" version="0.3.0"
               companyName="Epsilon Sounds" companyCopyright="Edison" bundleIdentifier="com.epsilonsounds.expansion.time"
               pluginFormats="buildAU,buildStandalone,buildVST3" pluginCharacteristicsValue=""
               pluginName="Epsilon Time" pluginDesc="Dual variable-clock delay" pluginManufacturer="Epsilon Sounds"

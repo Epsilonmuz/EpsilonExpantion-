@@ -1,4 +1,4 @@
-# Epsilon Expansion 0.2
+# Epsilon Expansion 0.3
 
 Nine creative effects with their own sound and look. Each one has the same set of controls and behaviours as a well-known studio effect. The DSP, names and graphics are all original.
 
@@ -90,6 +90,35 @@ Every plugin has Mix and Output, IN/OUT meters and a live input/output spectrum.
   * **Drive** and **Tone**.
   * Voice range: Auto, Low, Mid or High.
 
+## What changed in 0.3: Voice rebuilt for low latency and low CPU
+In 0.2, Voice used a general-purpose phase-vocoder shifter with a 2048-sample analysis block. That meant about 46-50 ms of latency and 18-30% of a CPU core, too slow to sing through.
+
+A voice is monophonic and periodic, so 0.3 uses **TD-PSOLA** (pitch-synchronous overlap-add), the classic real-time voice method:
+- A YIN tracker finds the period.
+- Two-period grains are cut one period apart and laid down again at the new period.
+- Each grain keeps the vocal tract's resonances, so formants stay put on their own. Reading a grain faster or slower moves them on purpose (Formant knob, or Link).
+- Grains are read while they play, so the look-ahead only has to cover about half a period.
+- Quantize and Robot set the output period straight from the target note. Robot is dead flat and Quantize lands exactly on the semitone.
+
+| | 0.2 | 0.3 |
+|---|---|---|
+| Latency | 46.4 ms (48 kHz), 50.5 ms (44.1 kHz) | **11.1 ms** |
+| CPU, 48 kHz, one instance | about 18% of a core | **about 3.7%** |
+| Voice quality checks (`Tests/voice_quality.cpp`, 3 sample rates) | 33 pass / 27 fail | **59 / 59 pass** |
+
+The pitch tracker's difference function is updated one sample at a time, instead of being recomputed every 4 ms. The tube Drive stage is switched out (with a matching delay and a 20 ms cross-fade) when Drive is at 0 dB.
+
+**Editors draw faster.** The faceplate is cached at the screen's real pixel density. Before, it was re-scaled for Retina on every repaint, which was the biggest cost of every frame and also made it slightly soft.
+
+## 0.3: lag fixes (measured on Intel and Apple Silicon Macs)
+`.github/workflows/perf.yml` measures Voice latency and CPU per audio block, and the editors' drawing cost, on GitHub's Intel Mac (same chip generation as a 2019 MacBook Pro) and on Apple Silicon. The results are in each run's Summary.
+* **Voice latency went from 46 ms to 11 ms.** The general-purpose phase vocoder is replaced by a pitch-synchronous (TD-PSOLA) shifter driven by the YIN pitch tracker, with formants moved by resampling each grain. CPU is about 1% of a core on Apple Silicon, and 59 quality checks pass (`Tests/voice_quality.cpp`).
+* **Editors redraw only what moves.**
+  * macOS merges a window's dirty areas into one rectangle, so updating the display and the meters made JUCE repaint every knob between them, 30 times a second.
+  * The editor now draws through a software-rendered cache that re-renders only the areas that actually changed, one by one. The system then shows the result as a single bitmap.
+  * The VU and gain-reduction meter faces are cached, and only the needle is drawn each frame. A resting needle doesn't redraw at all.
+  * Measured drawing cost per frame dropped by about 50–70% on every plugin.
+
 ## What changed from 0.1 (test findings fixed)
 
 | Area | 0.1 finding | 0.2 |
@@ -101,14 +130,13 @@ Every plugin has Mix and Output, IN/OUT meters and a live input/output spectrum.
 | Space | Feedback network about 15% short; not a tap swarm | 64-tap shaped swarm, Shape/Contour, Texture, Color, Warp, Freeze |
 | Prism | Pitch 9–37 cents off | Pitch now accurate within a few cents (YIN-measured) |
 | Tone | Wrong mid frequencies and drive range | 700 Hz to 5.6 kHz mids, proportional Q, Drive −15 to +15 dB |
-| Voice | No Quantize, Robot or Link | All three added (YIN tracker plus Signalsmith Stretch) |
+| Voice | No Quantize, Robot or Link | All three added (YIN tracker plus a low-latency PSOLA shifter) |
 | Hosts | Switches could restore half-way (pluginval strictness 8) | Stepped, discrete parameters snap exactly |
 | Packaging | Nine .jucer files in one folder shared one JuceLibraryCode; Intel-only | One folder per plugin, Universal, JUCE 9.0.5 bundled |
 
 ### Remaining limits
 * At 44.1 kHz the plate tails ring 16–19 dB above the tail median. That is much better than 0.1 (22–40 dB) but above ideal diffuse noise (about 11–12 dB).
 * With Heat at 4× and an extreme high-frequency test tone, aliasing is about −45 dBc. Ultra (8×) brings it down to about −78 dBc.
-* Voice has about 46 ms of latency, which the host compensates for. It is meant for mixing, not for live monitoring.
 
 ## Tests
 
@@ -124,6 +152,5 @@ clang++ -O3 -std=c++17 -march=haswell -ISource Tests/fuzz.cpp -o fuzz && ./fuzz 
 
 ## Licences
 * **JUCE 9.0.5** is dual-licensed under AGPLv3 or a commercial JUCE licence. If you sell these plugins closed-source, you need a commercial JUCE licence. See `JUCE/LICENSE.md`.
-* **Signalsmith Stretch / Linear** are MIT (`ThirdParty/*_LICENSE.txt`).
 * **Inter** typeface is under the SIL Open Font License 1.1 (`ThirdParty/Inter/OFL.txt`).
 * The product names, panels and DSP are original. No third-party trademarks, logos or graphics are used.

@@ -36,13 +36,21 @@ public:
         }
         if (! valid.containsRectangle (bounds))
         {
-            juce::LowLevelGraphicsSoftwareRenderer renderer (image);
-            renderer.addTransform (juce::AffineTransform::scale (scale));
             juce::RectangleList<int> dirty (bounds);
             for (auto& r : valid) dirty.subtract (r);
-            renderer.clipToRectangleList (dirty);
+            dirty.consolidate();
+            // Paint each dirty rectangle on its own. JUCE decides which child components to
+            // paint from the clip's bounding box, so one combined clip spanning the display
+            // (top left) and the meters (bottom right) would repaint every knob in between.
+            juce::LowLevelGraphicsSoftwareRenderer renderer (image);
+            renderer.addTransform (juce::AffineTransform::scale (scale));
             juce::Graphics ig (renderer);
-            owner.paintEntireComponent (ig, true);
+            for (auto& r : dirty)
+            {
+                juce::Graphics::ScopedSaveState state (ig);
+                ig.reduceClipRegion (r);
+                owner.paintEntireComponent (ig, true);
+            }
             valid = bounds;
         }
         g.setImageResamplingQuality (juce::Graphics::lowResamplingQuality);     // 1:1 pixels
@@ -150,8 +158,12 @@ public:
     float scale = 1.0f;
 private:
     juce::String text; Theme theme; float lo, hi; bool rev, cream;
-    float shown = -60, velocity = 0;
+    float shown = -60, velocity = 0, drawnAngle = 100.0f;
     float angleFor (float db) const;
+    void resized() override;
+    void renderCache (float pixelScale);
+    juce::Image faceImage, glassImage;
+    float cacheScale = 0.0f;
 };
 
 // ------------------------------------------------------------------ small text button (header)
