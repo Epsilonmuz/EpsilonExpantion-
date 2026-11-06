@@ -140,6 +140,10 @@ ExpansionEditor::ExpansionEditor (ExpansionProcessor& p)
     : AudioProcessorEditor (p), proc (p), theme (ui::themeFor (p.effect)), lnf (theme), layout (layoutFor (p.effect))
 {
     setLookAndFeel (&lnf);
+    // draw with JUCE's software renderer (much lighter than CoreGraphics on Macs); set
+    // EPSILON_NATIVE_RENDER=1 in the environment to compare against the system renderer
+    if (juce::SystemStats::getEnvironmentVariable ("EPSILON_NATIVE_RENDER", {}) != "1")
+        setCachedComponentImage (new ui::SoftwareCachedImage (*this));
     display = ui::makeDisplay (proc, theme);
     addAndMakeVisible (*display);
     spectrum = std::make_unique<ui::Spectrum> (proc, theme);
@@ -344,9 +348,17 @@ void ExpansionEditor::resized()
     inMeter.setBounds (sc (856, 412, 22, 136));
     outMeter.setBounds (sc (880, 412, 22, 136));
 
-    // cached faceplate
-    background = Image (Image::ARGB, jmax (1, getWidth()), jmax (1, getHeight()), true);
+    backgroundScale = 0.0f;                     // re-rendered at the screen's pixel density on the next paint
+}
+
+// The faceplate is drawn once into a bitmap at the screen's real pixel density (2x on Retina),
+// so each repaint is a straight copy instead of a rescale of the whole panel.
+void ExpansionEditor::renderBackground (float pixelScale)
+{
+    backgroundScale = pixelScale;
+    background = Image (Image::RGB, jmax (1, roundToInt ((float) getWidth() * pixelScale)), jmax (1, roundToInt ((float) getHeight() * pixelScale)), false, SoftwareImageType());
     Graphics g (background);
+    g.addTransform (AffineTransform::scale (pixelScale));
     const auto R = getLocalBounds().toFloat();
     ui::draw::faceplate (g, R, theme, s);
     // header band
@@ -387,7 +399,10 @@ void ExpansionEditor::resized()
 
 void ExpansionEditor::paint (Graphics& g)
 {
-    g.drawImageAt (background, 0, 0);
+    const float pixelScale = jmax (1.0f, g.getInternalContext().getPhysicalPixelScaleFactor());
+    if (! background.isValid() || std::abs (pixelScale - backgroundScale) > 0.01f) renderBackground (pixelScale);
+    g.setImageResamplingQuality (Graphics::lowResamplingQuality);
+    g.drawImage (background, getLocalBounds().toFloat());
     if (! tweakVisible && layout.strip.size() == 1)
         ui::draw::engraved (g, String (proc.info.spec[size_t (layout.strip[0])].name).toUpperCase(),
                             Rectangle<float> (28 * s, 382 * s, 444 * s, 12 * s), Justification::centred, ui::font (9.0f * s, true, 0.25f), theme.inkFaint);

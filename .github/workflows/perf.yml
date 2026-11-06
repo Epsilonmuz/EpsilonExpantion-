@@ -1,0 +1,36 @@
+# Performance on real Macs: Voice latency/CPU per block, and every editor's per-frame drawing cost
+# with the system renderer (CoreGraphics) vs the software-rendered cache. Results: run > Summary.
+name: Performance report
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["Source/**", "Tests/ui_perf.cpp", "Tests/voice_bench.cpp", ".github/workflows/perf.yml"]
+
+jobs:
+  perf:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15-intel, macos-15]      # Intel (like a 2019 MacBook Pro) and Apple Silicon
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - name: Machine
+        run: echo "### ${{ matrix.runner }}: $(sysctl -n machdep.cpu.brand_string), $(sysctl -n hw.ncpu) cores" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Voice latency and CPU
+        run: |
+          clang++ -O3 -std=c++17 -ISource Tests/voice_bench.cpp -o voice_bench
+          ./voice_bench | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Build UI perf tool
+        run: |
+          git clone --depth 1 --branch 9.0.5 https://github.com/juce-framework/JUCE.git juce-full
+          cmake -B build -DJUCE_PATH="$PWD/juce-full" -DEPSILON_UI_TESTS=ON -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target epsilon_ui_perf --config Release -j 4
+      - name: Editor drawing cost
+        run: |
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          APP=$(find build -path "*epsilon_ui_perf_artefacts*" -type f -perm -u+x | head -1)
+          "$APP" | tee -a "$GITHUB_STEP_SUMMARY"

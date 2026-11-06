@@ -12,6 +12,8 @@ public:
     void resized() override;
     void refreshForSnapshot (int frames);       // used by the headless snapshot tool
     void setTweakVisible (bool);
+    // for the UI performance tool: the parts that redraw every frame
+    std::vector<juce::Component*> animatedParts() { return { display.get(), spectrum.get(), &inMeter, &outMeter }; }
 
 private:
     struct Layout
@@ -50,6 +52,8 @@ private:
     std::array<bool, 2> bankUsed { { false, false } };
     int bank = 0;
     bool tweakVisible = false;
-    juce::Image background;                     // cached faceplate
+    juce::Image background;                     // cached faceplate, at screen pixel density
+    float backgroundScale = 0.0f;
+    void renderBackground (float pixelScale);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExpansionEditor)
 };

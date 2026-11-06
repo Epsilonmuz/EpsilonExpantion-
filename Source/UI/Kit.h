@@ -15,6 +15,49 @@ void engraved (juce::Graphics&, const juce::String&, juce::Rectangle<float>, juc
 void glowStroke (juce::Graphics&, const juce::Path&, juce::Colour, float width, float glow);
 }
 
+// ------------------------------------------------------------------ rendering
+// macOS's CoreGraphics is slow at the many gradients, glows and long paths an animated plug-in
+// panel draws (measured on an Intel Mac: about half a CPU core at 30 fps for one display).
+// Attached to the editor, this cache makes JUCE's own software renderer draw every repainted
+// area into a native bitmap, which the system then shows as a single image.
+class SoftwareCachedImage : public juce::CachedComponentImage
+{
+public:
+    explicit SoftwareCachedImage (juce::Component& c) : owner (c) {}
+    void paint (juce::Graphics& g) override
+    {
+        const float scale = juce::jmax (1.0f, g.getInternalContext().getPhysicalPixelScaleFactor());
+        const auto bounds = owner.getLocalBounds();
+        const auto imageBounds = (bounds.toFloat() * scale).getSmallestIntegerContainer();
+        if (image.isNull() || image.getWidth() != imageBounds.getWidth() || image.getHeight() != imageBounds.getHeight())
+        {
+            image = juce::Image (juce::Image::RGB, juce::jmax (1, imageBounds.getWidth()), juce::jmax (1, imageBounds.getHeight()), true, juce::NativeImageType());
+            valid.clear();
+        }
+        if (! valid.containsRectangle (bounds))
+        {
+            juce::LowLevelGraphicsSoftwareRenderer renderer (image);
+            renderer.addTransform (juce::AffineTransform::scale (scale));
+            juce::RectangleList<int> dirty (bounds);
+            for (auto& r : valid) dirty.subtract (r);
+            renderer.clipToRectangleList (dirty);
+            juce::Graphics ig (renderer);
+            owner.paintEntireComponent (ig, true);
+            valid = bounds;
+        }
+        g.setImageResamplingQuality (juce::Graphics::lowResamplingQuality);     // 1:1 pixels
+        g.drawImageTransformed (image, juce::AffineTransform::scale ((float) bounds.getWidth() / (float) image.getWidth(),
+                                                                     (float) bounds.getHeight() / (float) image.getHeight()), false);
+    }
+    bool invalidateAll() override { valid.clear(); return true; }
+    bool invalidate (const juce::Rectangle<int>& area) override { valid.subtract (area); return true; }
+    void releaseResources() override { image = {}; valid.clear(); }
+private:
+    juce::Component& owner;
+    juce::Image image;
+    juce::RectangleList<int> valid;
+};
+
 // ------------------------------------------------------------------ look and feel
 class LookAndFeel : public juce::LookAndFeel_V4
 {
