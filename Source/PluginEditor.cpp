@@ -366,20 +366,13 @@ void ExpansionEditor::renderBackground (float pixelScale)
     g.setColour (Colours::black.withAlpha (0.35f)); g.fillRect (head);
     g.setColour (Colours::white.withAlpha (0.06f)); g.fillRect (head.withY (head.getBottom() - 1).withHeight (1.0f));
     g.setColour (Colours::black.withAlpha (0.6f)); g.fillRect (head.withY (head.getBottom()).withHeight (1.0f));
-    // logo: epsilon mark + product name
+    // Epsilon Sounds product mark (shared design system); the effect's hue marks the tagline only
     {
-        const auto mark = Rectangle<float> (24 * s, 17 * s, 36 * s, 36 * s);
-        g.setGradientFill (ColourGradient (theme.accent.brighter (0.2f), mark.getX(), mark.getY(), theme.accent.darker (0.5f), mark.getRight(), mark.getBottom(), false));
-        g.fillEllipse (mark);
-        g.setColour (Colours::black.withAlpha (0.85f)); g.setFont (ui::font (26.0f * s, true));
-        g.drawText (String (CharPointer_UTF8 ("\xce\xb5")), mark.translated (0, -2 * s), Justification::centred);
-        g.setFont (ui::font (9.5f * s, true, 0.42f)); g.setColour (theme.inkDim);
-        g.drawText ("EPSILON", Rectangle<float> (70 * s, 15 * s, 200 * s, 14 * s), Justification::left);
-        g.setFont (ui::font (27.0f * s, true, 0.08f)); g.setColour (theme.ink);
-        g.drawText (proc.info.name, Rectangle<float> (68 * s, 26 * s, 200 * s, 30 * s), Justification::left);
-        g.setFont (ui::font (8.5f * s, true, 0.18f)); g.setColour (theme.accent.withAlpha (0.8f));
-        const float nameW = GlyphArrangement::getStringWidth (ui::font (27.0f * s, true, 0.08f), proc.info.name);
-        g.drawText (theme.tagline, Rectangle<float> (68 * s + nameW + 12 * s, 37 * s, 220 * s, 14 * s), Justification::left);
+        const float right = epsilon_ui::drawProductMark (g, { 24 * s, 20 * s }, s, epsilon_ui::Tier::Epsilon, proc.info.name, {},
+                                                         [] (float h, bool b) { return ui::font (h, b); });
+        g.setFont (ui::font (9.5f * s, true, 0.16f)); g.setColour (theme.accent.withAlpha (0.85f));
+        g.drawText (theme.tagline, Rectangle<float> (64 * s, 41 * s, 320 * s, 12 * s), Justification::left);
+        ignoreUnused (right);
     }
     // panels
     ui::draw::glass (g, Rectangle<float> (28 * s, 88 * s, 444 * s, 240 * s), theme, 8 * s, s);

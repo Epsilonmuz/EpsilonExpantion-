@@ -2,6 +2,7 @@
 // Visual identity per effect: one accent hue, a faceplate finish and the glass display tint.
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "../DSP/Definitions.h"
+#include "../../Shared/epsilon_ui/EpsilonHeader.h"
 
 namespace eps::ui {
 struct Theme
@@ -31,6 +32,15 @@ inline Theme themeFor (Effect e)
         case Effect::Tone:  t = { C (0xff8fb3ff), C (0xffd0dcff), C (0xff232832), C (0xff11141a), C (0xff0d1015), C (0xff090b0f) }; t.tagline = "BROADCAST CONSOLE EQ"; break;
         case Effect::Voice: t = { C (0xffff6fd8), C (0xffffb36b), C (0xff2a1f2b), C (0xff140e15), C (0xff100b11), C (0xff0b070c) }; t.brushed = false; t.tagline = "PITCH, FORMANT AND ROBOT"; break;
     }
+    // Epsilon Sounds design system v1 (Epsilon tier): one shared graphite faceplate for the whole
+    // suite; each effect keeps its signature hue only on its display and live controls.
+    const auto b = epsilon_ui::palette (epsilon_ui::Tier::Epsilon);
+    t.plateTop = b.surface.brighter (0.04f);
+    t.plateBottom = b.surface;
+    t.panel = b.bg;
+    t.glass = b.bg.darker (0.35f).interpolatedWith (t.accent, 0.035f);
+    t.ink = b.ink; t.inkDim = b.inkMuted; t.inkFaint = epsilon_ui::faint (b);
+    t.brushed = false;                      // flat machined finish, no fake grain
     return t;
 }
 
