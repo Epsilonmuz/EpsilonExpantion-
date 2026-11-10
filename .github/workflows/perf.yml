@@ -35,3 +35,6 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           APP=$(find build -path "*epsilon_ui_perf_artefacts*" -type f -perm -u+x | head -1)
           "$APP" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Silent and untouched** (nothing should redraw):" >> "$GITHUB_STEP_SUMMARY"
+          EPS_SILENT=1 "$APP" | tee -a "$GITHUB_STEP_SUMMARY"
