@@ -152,5 +152,5 @@ clang++ -O3 -std=c++17 -march=haswell -ISource Tests/fuzz.cpp -o fuzz && ./fuzz 
 
 ## Licences
 * **JUCE 9.0.5** is dual-licensed under AGPLv3 or a commercial JUCE licence. If you sell these plugins closed-source, you need a commercial JUCE licence. See `JUCE/LICENSE.md`.
-* **Inter** typeface is under the SIL Open Font License 1.1 (`ThirdParty/Inter/OFL.txt`).
+* The **Epsilon Dial** typeface (`Shared/epsilon_ui/EpsilonDialFont.h`) is proprietary to Epsilon Sounds.
 * The product names, panels and DSP are original. No third-party trademarks, logos or graphics are used.

@@ -3,6 +3,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "../DSP/Definitions.h"
 #include "../../Shared/epsilon_ui/EpsilonHeader.h"
+#include "../../Shared/epsilon_ui/EpsilonDialFont.h"
 
 namespace eps::ui {
 struct Theme
@@ -44,14 +45,10 @@ inline Theme themeFor (Effect e)
     return t;
 }
 
-namespace fonts { extern const unsigned char interMedium[], interBold[]; extern const size_t interMediumSize, interBoldSize; }
-
-// Embedded Inter so the panels look identical on every machine.
+// Epsilon Dial, the Epsilon Sounds house typeface, embedded so the panels look identical on every machine.
 inline juce::Font font (float height, bool bold = false, float kerning = 0.0f)
 {
-    static const juce::Typeface::Ptr medium = juce::Typeface::createSystemTypefaceFor (fonts::interMedium, fonts::interMediumSize);
-    static const juce::Typeface::Ptr heavy  = juce::Typeface::createSystemTypefaceFor (fonts::interBold, fonts::interBoldSize);
-    auto f = juce::Font (juce::FontOptions (bold ? heavy : medium).withHeight (height));
+    auto f = epsilon_ui::dial::font (height, bold);
     return kerning != 0.0f ? f.withExtraKerningFactor (kerning) : f;
 }
 }
