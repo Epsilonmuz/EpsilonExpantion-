@@ -2,6 +2,7 @@
 // Epsilon UI kit: faceplate drawing, knobs, LED switches, segmented selectors, meters.
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "Theme.h"
+#include "../../Shared/epsilon_ui/EpsilonSignature.h"
 
 namespace eps::ui {
 

@@ -138,76 +138,10 @@ LookAndFeel::LookAndFeel (const Theme& t) : theme (t)
     setColour (TooltipWindow::textColourId, theme.ink);
 }
 
-void LookAndFeel::drawRotarySlider (Graphics& g, int x, int y, int w, int h, float pos, float a0, float a1, Slider& s)
+void LookAndFeel::drawRotarySlider (Graphics& g, int x, int y, int w, int h, float pos, float, float, Slider& s)
 {
-    const float sc = scale;
-    const auto bounds = Rectangle<float> (float (x), float (y), float (w), float (h));
-    const float radius = jmin (bounds.getWidth(), bounds.getHeight()) * 0.5f;
-    const auto c = bounds.getCentre();
-    const bool hero = bool (s.getProperties().getWithDefault ("hero", false));
-    const bool bipolar = bool (s.getProperties().getWithDefault ("bipolar", false));
-    const float angle = a0 + pos * (a1 - a0);
-    const float ringR = radius * 0.94f, capR = radius * (hero ? 0.66f : 0.64f);
-
-    // scale ticks
-    const int ticks = hero ? 21 : 11;
-    for (int i = 0; i < ticks; ++i)
-    {
-        const float a = a0 + float (i) / float (ticks - 1) * (a1 - a0);
-        const bool major = ! hero || i % 2 == 0;
-        const float r0 = ringR + 2.5f * sc, r1 = ringR + (major ? 6.5f : 4.5f) * sc;
-        g.setColour ((major ? theme.inkDim : theme.inkFaint).withAlpha (0.8f));
-        g.drawLine (Line<float> (c.getPointOnCircumference (r0, a), c.getPointOnCircumference (r1, a)), (major ? 1.4f : 1.0f) * sc);
-    }
-    // groove + value arc with glow
-    Path groove; groove.addCentredArc (c.x, c.y, ringR - 3 * sc, ringR - 3 * sc, 0, a0, a1, true);
-    g.setColour (Colours::black.withAlpha (0.65f));
-    g.strokePath (groove, PathStrokeType (5.0f * sc, PathStrokeType::curved, PathStrokeType::rounded));
-    const float from = bipolar ? (a0 + a1) * 0.5f : a0;
-    if (std::abs (angle - from) > 0.01f)
-    {
-        Path arc; arc.addCentredArc (c.x, c.y, ringR - 3 * sc, ringR - 3 * sc, 0, jmin (from, angle), jmax (from, angle), true);
-        draw::glowStroke (g, arc, theme.accent, 3.0f * sc, s.isMouseOverOrDragging() ? 1.6f : 1.0f);
-    }
-    // drop shadow
-    for (int i = 6; i >= 1; --i)
-    {
-        g.setColour (Colours::black.withAlpha (0.07f));
-        g.fillEllipse (c.x - capR - float (i) * sc, c.y - capR - float (i) * sc + 4 * sc, (capR + float (i) * sc) * 2, (capR + float (i) * sc) * 2);
-    }
-    // knurled skirt
-    const float skirtR = capR + (hero ? 6.0f : 4.5f) * sc;
-    ColourGradient skirt (Colour (0xff4a4744), c.x - skirtR, c.y - skirtR, Colour (0xff121110), c.x + skirtR, c.y + skirtR, false);
-    g.setGradientFill (skirt);
-    g.fillEllipse (c.x - skirtR, c.y - skirtR, skirtR * 2, skirtR * 2);
-    const int knurls = hero ? 72 : 48;
-    for (int i = 0; i < knurls; ++i)
-    {
-        const float a = float (i) / float (knurls) * MathConstants<float>::twoPi + angle;
-        g.setColour ((i % 2 ? Colours::white.withAlpha (0.10f) : Colours::black.withAlpha (0.35f)));
-        g.drawLine (Line<float> (c.getPointOnCircumference (capR, a), c.getPointOnCircumference (skirtR - 0.5f * sc, a)), 1.0f * sc);
-    }
-    // machined aluminium cap
-    ColourGradient cap (Colour (0xff6d6a66), c.x - capR * 0.6f, c.y - capR * 0.9f, Colour (0xff1f1e1d), c.x + capR * 0.5f, c.y + capR, false);
-    cap.addColour (0.45, Colour (0xff3b3936));
-    g.setGradientFill (cap);
-    g.fillEllipse (c.x - capR, c.y - capR, capR * 2, capR * 2);
-    for (int i = 1; i <= 5; ++i)
-    {
-        const float rr = capR * float (i) / 5.5f;
-        g.setColour (Colours::white.withAlpha (i % 2 ? 0.025f : 0.045f));
-        g.drawEllipse (c.x - rr, c.y - rr, rr * 2, rr * 2, 0.8f * sc);
-    }
-    ColourGradient spec (Colours::white.withAlpha (0.22f), c.x - capR * 0.35f, c.y - capR * 0.75f, Colours::transparentWhite, c.x, c.y, true);
-    g.setGradientFill (spec);
-    g.fillEllipse (c.x - capR, c.y - capR, capR * 2, capR * 2);
-    g.setColour (Colours::black.withAlpha (0.6f));
-    g.drawEllipse (c.x - capR, c.y - capR, capR * 2, capR * 2, 1.0f * sc);
-    // pointer
-    Path pointer;
-    const auto p0 = c.getPointOnCircumference (capR * 0.30f, angle), p1 = c.getPointOnCircumference (capR * 0.92f, angle);
-    pointer.startNewSubPath (p0); pointer.lineTo (p1);
-    draw::glowStroke (g, pointer, theme.accent.brighter (0.3f), (hero ? 3.2f : 2.4f) * sc, 1.2f);
+    // Epsilon Sounds signature knob: coin edge, watch-hand pointer, champagne lume tip (static layers cached)
+    epsilon_ui::signature::knob (g, Rectangle<float> (float (x), float (y), float (w), float (h)).reduced (4.0f * scale), pos, s, epsilon_ui::Tier::Epsilon);
 }
 
 void LookAndFeel::drawPopupMenuBackground (Graphics& g, int w, int h)
@@ -308,29 +242,13 @@ LedSwitch::LedSwitch (AudioProcessorValueTreeState& st, const String& id, const 
 }
 void LedSwitch::paintButton (Graphics& g, bool over, bool down)
 {
-    const float s = scale;
-    auto r = getLocalBounds().toFloat().reduced (1.5f * s);
-    const bool on = getToggleState();
-    // body
-    ColourGradient body (Colour (0xff34322f).brighter (over ? 0.08f : 0.0f), r.getX(), r.getY(), Colour (0xff141312), r.getX(), r.getBottom(), false);
-    g.setColour (Colours::black.withAlpha (0.6f)); g.fillRoundedRectangle (r.translated (0, 2 * s), 6 * s);
-    g.setGradientFill (body); g.fillRoundedRectangle (r.translated (0, down ? 1.0f * s : 0.0f), 6 * s);
-    g.setColour (Colours::white.withAlpha (0.10f)); g.drawRoundedRectangle (r.reduced (0.5f), 6 * s, 1.0f);
-    // LED
-    const float d = 7.5f * s;
-    const auto led = Rectangle<float> (r.getX() + 10 * s, r.getCentreY() - d * 0.5f, d, d);
-    if (on)
-    {
-        for (int i = 3; i >= 1; --i) { g.setColour (theme.accent.withAlpha (0.12f)); g.fillEllipse (led.expanded (float (i) * 2.2f * s)); }
-        ColourGradient lg (Colours::white, led.getCentreX() - d * 0.2f, led.getCentreY() - d * 0.2f, theme.accent, led.getRight(), led.getBottom(), true);
-        g.setGradientFill (lg);
-    }
-    else g.setColour (Colour (0xff201e1c));
-    g.fillEllipse (led);
-    g.setColour (Colours::black.withAlpha (0.7f)); g.drawEllipse (led, 0.8f * s);
-    g.setFont (font (11.0f * s, true, 0.14f));
-    g.setColour (on ? theme.ink : theme.inkDim);
-    g.drawText (getButtonText().toUpperCase(), r.withTrimmedLeft (24 * s).withTrimmedRight (6 * s), Justification::centredLeft);
+    // Epsilon Sounds signature pill with an LED jewel
+    epsilon_ui::controls::State st; st.hover = over; st.pressed = down; st.on = getToggleState(); st.disabled = ! isEnabled();
+    Rectangle<float> label;
+    const auto ink = epsilon_ui::controls::drawPill (g, getLocalBounds().toFloat().reduced (1.5f * scale), epsilon_ui::palette (epsilon_ui::Tier::Epsilon), st, label);
+    g.setFont (font (11.0f * scale, true, 0.14f));
+    g.setColour (ink);
+    g.drawText (getButtonText().toUpperCase(), label.withTrimmedLeft (6 * scale).withTrimmedRight (6 * scale), Justification::centred);
 }
 
 // ================================================================== segmented selector
@@ -358,28 +276,21 @@ void Segmented::mouseMove (const MouseEvent& e) { const int h = indexAt (e.posit
 void Segmented::mouseExit (const MouseEvent&) { hover = -1; repaint(); }
 void Segmented::paint (Graphics& g)
 {
-    const float s = scale;
+    // Epsilon Sounds signature segmented switch: the selected cap carries the lume bar
+    const auto pal = epsilon_ui::palette (epsilon_ui::Tier::Epsilon);
     auto r = getLocalBounds().toFloat().reduced (1.0f);
-    g.setColour (Colours::black.withAlpha (0.65f)); g.fillRoundedRectangle (r, 6 * s);
-    g.setColour (Colours::white.withAlpha (0.06f)); g.drawRoundedRectangle (r.translated (0, 1), 6 * s, 1.0f);
     const int n = jmax (1, names.size());
     const float w = r.getWidth() / float (n);
+    std::vector<Rectangle<float>> segs;
+    for (int i = 0; i < n; ++i) segs.push_back ({ r.getX() + w * float (i), r.getY(), w, r.getHeight() });
+    epsilon_ui::controls::drawSegmentTrack (g, r, segs, current, pal);
     for (int i = 0; i < n; ++i)
     {
-        auto cell = Rectangle<float> (r.getX() + w * float (i), r.getY(), w, r.getHeight()).reduced (2.0f * s);
-        if (i == current)
-        {
-            for (int k = 2; k >= 1; --k) { g.setColour (theme.accent.withAlpha (0.10f)); g.fillRoundedRectangle (cell.expanded (float (k) * 2 * s), 5 * s); }
-            ColourGradient on (theme.accent.brighter (0.25f), cell.getX(), cell.getY(), theme.accent.darker (0.35f), cell.getX(), cell.getBottom(), false);
-            g.setGradientFill (on); g.fillRoundedRectangle (cell, 5 * s);
-            g.setColour (Colours::white.withAlpha (0.35f)); g.drawLine (cell.getX() + 4 * s, cell.getY() + 1, cell.getRight() - 4 * s, cell.getY() + 1, 1.0f);
-        }
-        else if (i == hover) { g.setColour (Colours::white.withAlpha (0.06f)); g.fillRoundedRectangle (cell, 5 * s); }
-        if (i > 0 && i != current && i - 1 != current)
-        { g.setColour (Colours::white.withAlpha (0.07f)); g.fillRect (cell.getX() - 2 * s, cell.getY() + cell.getHeight() * 0.25f, 1.0f, cell.getHeight() * 0.5f); }
-        g.setFont (font (jmin (11.5f * s, cell.getHeight() * 0.48f), true, 0.08f));
-        g.setColour (i == current ? Colour (0xff0d0c0b) : theme.inkDim);
-        g.drawFittedText (names[i].toUpperCase(), cell.toNearestInt(), Justification::centred, 1, 0.75f);
+        epsilon_ui::controls::State st; st.on = i == current; st.hover = i == hover;
+        const auto ink = epsilon_ui::controls::drawSegment (g, segs[size_t (i)], pal, st);
+        g.setFont (font (jmin (11.5f * scale, segs[size_t (i)].getHeight() * 0.42f), true, 0.08f));
+        g.setColour (ink);
+        g.drawFittedText (names[i].toUpperCase(), segs[size_t (i)].withTrimmedBottom (4.0f).toNearestInt(), Justification::centred, 1, 0.75f);
     }
 }
 
