@@ -63,3 +63,48 @@ jobs:
           name: Epsilon${{ matrix.effect }}-macOS
           path: dist
           retention-days: 30
+
+  pack:
+    # One download with all nine: VST3 + AU folders and a double-click installer
+    needs: mac
+    runs-on: macos-15
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Epsilon*-macOS
+          path: parts
+      - name: Assemble the Expansion pack
+        run: |
+          P="Epsilon Expansion"
+          mkdir -p "$P/VST3" "$P/Components" "$P/Standalone"
+          for d in parts/*; do
+            cp -R "$d"/*.vst3 "$P/VST3/"
+            cp -R "$d"/*.component "$P/Components/"
+            cp -R "$d"/*.app "$P/Standalone/" 2>/dev/null || true
+          done
+          cat > "$P/Install Expansion.command" <<'SH'
+          #!/bin/bash
+          # Installs all nine Epsilon Expansion plugins (VST3 + AU) and clears the download quarantine.
+          cd "$(dirname "$0")" || exit 1
+          V="$HOME/Library/Audio/Plug-Ins/VST3"; A="$HOME/Library/Audio/Plug-Ins/Components"
+          mkdir -p "$V" "$A"
+          for p in VST3/*.vst3; do rm -rf "$V/$(basename "$p")"; cp -R "$p" "$V/"; xattr -dr com.apple.quarantine "$V/$(basename "$p")"; echo "VST3  $(basename "$p")"; done
+          for p in Components/*.component; do rm -rf "$A/$(basename "$p")"; cp -R "$p" "$A/"; xattr -dr com.apple.quarantine "$A/$(basename "$p")"; echo "AU    $(basename "$p")"; done
+          killall -9 AudioComponentRegistrar >/dev/null 2>&1
+          echo; echo "Installed. In FL Studio: Options > Manage plugins > Find more plugins."
+          read -r -p "Press Return to close." _
+          SH
+          sed -i '' 's/^          //' "$P/Install Expansion.command"
+          chmod +x "$P/Install Expansion.command"
+          cat > "$P/READ ME FIRST.txt" <<'TXT'
+          Epsilon Expansion - all nine plugins, Intel + Apple Silicon.
+          Right-click "Install Expansion.command" > Open (the first time macOS asks because it isn't signed).
+          It copies every VST3 and AU into ~/Library/Audio/Plug-Ins and clears the quarantine. Then rescan in your DAW.
+          TXT
+          ls -R "$P" | head -40
+          ditto -c -k --keepParent "$P" "Epsilon-Expansion-macOS.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Epsilon-Expansion-ALL-macOS
+          path: Epsilon-Expansion-macOS.zip
+          retention-days: 30

@@ -5,3 +5,4 @@ Builds/**/build/
 .DS_Store
 build/
 build9/
+build-logs/

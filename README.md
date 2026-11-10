@@ -16,7 +16,19 @@ Nine creative effects with their own sound and look. Each one has the same set o
 
 ![Epsilon panels](Docs/screenshots/sheet.png)
 
-## Build it (Projucer, the way you're used to)
+## Build all nine at once
+
+**Double-click `Build All Expansion.command`** (in this folder). It builds every plugin with Xcode (Release), copies the VST3 and AU into `~/Library/Audio/Plug-Ins`, clears the macOS quarantine and tells the system to rescan Audio Units. Then in FL Studio: *Options > Manage plugins > Find more plugins*.
+
+- The first run compiles JUCE once per plugin, so it takes a while; later runs only rebuild what changed.
+- It builds for your Mac's own chip (twice as fast). `UNIVERSAL=1` builds Intel + Apple Silicon together.
+- To build only some: in Terminal, `./"Build All Expansion.command" Heat Plate`.
+- If one fails, its log is in `build-logs/`.
+- The first time, macOS may say it can't verify the file: right-click it > *Open*.
+
+**Or skip building:** every push to GitHub builds all nine on a Mac. Open *Actions > latest "Build macOS" run > Artifacts* and download **Epsilon-Expansion-ALL-macOS**. Inside is one folder with all nine VST3/AU plugins and `Install Expansion.command`, which installs them all.
+
+## Build one (Projucer, the way you're used to)
 
 1. Open a plugin folder, for example `EpsilonHeat/`, and double-click **`EpsilonHeat.jucer`**.
 2. In Projucer click **Save and Open in IDE** (Xcode).
