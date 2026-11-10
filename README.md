@@ -1,4 +1,4 @@
-# Epsilon Expansion 0.3
+# Epsilon Expansion 0.4
 
 Nine creative effects with their own sound and look. Each one has the same set of controls and behaviours as a well-known studio effect. The DSP, names and graphics are all original.
 
@@ -89,6 +89,17 @@ Every plugin has Mix and Output, IN/OUT meters and a live input/output spectrum.
   * Modes: **Transpose**, **Quantize** (snaps to the nearest semitone) or **Robot** (holds one note).
   * **Drive** and **Tone**.
   * Voice range: Auto, Low, Mid or High.
+
+## What changed in 0.4: no more lag
+
+The panels were the problem, not the sound: every plugin redrew its display, spectrum and meters 30 times a second, all the time, and macOS merged those areas into one window-sized redraw. On an Intel Mac with a few instances open that starves the DAW's own screen.
+
+- **Nothing redraws when nothing happens.** With no audio and no control moving, a panel costs about 0.15 ms per frame (it was a full redraw).
+- **The display and the bottom row take turns** (60 Hz timer, 30 fps each), so macOS never merges them into one big redraw.
+- **Meters and needles redraw only what moves:** an LED meter only when a segment changes, a VU needle only the strip it sweeps through. The spectrum's grid and labels are a cached bitmap and it redraws only when a curve moves.
+- **Unoptimised builds say so.** A `-O0` build runs the DSP many times slower and stutters; the panel now shows *SLOW UNOPTIMISED BUILD* in red. Every Projucer configuration, Debug included, is set to `-O3`, so build with the projects in this repository.
+
+`Tests/ui_perf.cpp` measures the real dirty area each tick (playing and silent), and `perf.yml` runs it on an Intel Mac.
 
 ## What changed in 0.3: Voice rebuilt for low latency and low CPU
 In 0.2, Voice used a general-purpose phase-vocoder shifter with a 2048-sample analysis block. That meant about 46-50 ms of latency and 18-30% of a CPU core, too slow to sing through.

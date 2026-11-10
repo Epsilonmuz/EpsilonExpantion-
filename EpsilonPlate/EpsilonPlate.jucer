@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="DeGCry" name="Epsilon Plate" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" version="0.3.0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" version="0.4.0"
               companyName="Epsilon Sounds" companyCopyright="Edison" bundleIdentifier="com.epsilonsounds.expansion.plate"
               pluginFormats="buildAU,buildStandalone,buildVST3" pluginCharacteristicsValue=""
               pluginName="Epsilon Plate" pluginDesc="Electro-mechanical plate reverb" pluginManufacturer="Epsilon Sounds"

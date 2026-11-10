@@ -11,6 +11,7 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     void refreshForSnapshot (int frames);       // used by the headless snapshot tool
+    void tickForTest() { timerCallback(); }     // one 60 Hz tick, for the performance tool
     void setTweakVisible (bool);
     // for the UI performance tool: the parts that redraw every frame
     std::vector<juce::Component*> animatedParts() { return { display.get(), spectrum.get(), &inMeter, &outMeter }; }
@@ -52,6 +53,13 @@ private:
     std::array<bool, 2> bankUsed { { false, false } };
     int bank = 0;
     bool tweakVisible = false;
+    // Frame scheduling (lag fix, 0.4): the display and the bottom row (spectrum + meters) redraw on
+    // alternate ticks of a 60 Hz timer, so each runs at 30 fps but macOS never merges the two areas
+    // into one window-sized redraw; and nothing redraws while the plugin is silent and untouched.
+    unsigned frame = 0;
+    int quietTicks = 1000;
+    eps::Values lastValues {};
+    float pendingIn = 0, pendingOut = 0;
     juce::Image background;                     // cached faceplate, at screen pixel density
     float backgroundScale = 0.0f;
     void renderBackground (float pixelScale);

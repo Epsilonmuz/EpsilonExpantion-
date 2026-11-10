@@ -207,7 +207,7 @@ ExpansionEditor::ExpansionEditor (ExpansionProcessor& p)
     setResizeLimits (int (baseW * 0.7f), int (baseH * 0.7f), int (baseW * 2.0f), int (baseH * 2.0f));
     if (auto* c = getConstrainer()) c->setFixedAspectRatio (baseW / baseH);
     setSize (int (baseW), int (baseH));
-    startTimerHz (30);
+    startTimerHz (60);
 }
 
 ExpansionEditor::~ExpansionEditor() { stopTimer(); setLookAndFeel (nullptr); }
@@ -244,15 +244,32 @@ void ExpansionEditor::switchBank (int b)
 
 void ExpansionEditor::timerCallback()
 {
-    display->tick();
-    if (spectrum->isShowing() || ! isShowing()) spectrum->tick();
-    inMeter.push (proc.inputPeak.exchange (0.0f));
-    outMeter.push (proc.outputPeak.exchange (0.0f));
-    presetName.setButtonText (String (proc.getCurrentProgram() + 1).paddedLeft ('0', 2) + "   " + proc.getProgramName (proc.getCurrentProgram()));
-    bankA.setToggleState (bank == 0, dontSendNotification);
-    bankB.setToggleState (bank == 1, dontSendNotification);
+    // Peaks are collected every tick so short hits are never missed.
+    pendingIn = jmax (pendingIn, proc.inputPeak.exchange (0.0f));
+    pendingOut = jmax (pendingOut, proc.outputPeak.exchange (0.0f));
+    const bool even = (frame++ & 1u) == 0;
+    if (even)
+    {
+        // Is anything happening? Signal in or out (reverb tails count), or a control moved.
+        const auto v = proc.values();
+        const bool moved = v != lastValues;
+        lastValues = v;
+        quietTicks = jmax (pendingIn, pendingOut) > 1.0e-4f ? 0 : jmin (quietTicks + 1, 1000);
+        const bool live = quietTicks < 30;                       // keep animating for 1 s after the sound stops
+        if (display->isVisible() && (live || moved)) display->tick();
+        presetName.setButtonText (String (proc.getCurrentProgram() + 1).paddedLeft ('0', 2) + "   " + proc.getProgramName (proc.getCurrentProgram()));
+        bankA.setToggleState (bank == 0, dontSendNotification);
+        bankB.setToggleState (bank == 1, dontSendNotification);
+    }
+    else
+    {
+        if (spectrum->isShowing() || ! isShowing()) spectrum->tick();     // repaints only when a curve moved
+        inMeter.push (pendingIn);                                         // repaint only when a segment changes
+        outMeter.push (pendingOut);
+        pendingIn = pendingOut = 0;
+    }
 }
-void ExpansionEditor::refreshForSnapshot (int frames) { for (int i = 0; i < frames; ++i) timerCallback(); }
+void ExpansionEditor::refreshForSnapshot (int frames) { for (int i = 0; i < 2 * frames; ++i) timerCallback(); }
 
 Rectangle<int> ExpansionEditor::sc (float x, float y, float w, float h) const { return Rectangle<float> (x * s, y * s, w * s, h * s).toNearestInt(); }
 
@@ -399,6 +416,11 @@ void ExpansionEditor::paint (Graphics& g)
     if (! tweakVisible && layout.strip.size() == 1)
         ui::draw::engraved (g, String (proc.info.spec[size_t (layout.strip[0])].name).toUpperCase(),
                             Rectangle<float> (28 * s, 382 * s, 444 * s, 12 * s), Justification::centred, ui::font (9.0f * s, true, 0.25f), theme.inkFaint);
+   #if (defined (__clang__) || defined (__GNUC__)) && ! defined (__OPTIMIZE__)
+    // An unoptimised (-O0) build runs this DSP many times slower and stutters: say so on the panel.
+    g.setColour (Colour (0xffff4a4a)); g.setFont (ui::font (11.0f * s, true, 0.12f));
+    g.drawText ("SLOW UNOPTIMISED BUILD - BUILD RELEASE OR SET OPTIMISATION -O3", Rectangle<float> (300 * s, 572 * s, 600 * s, 14 * s), Justification::centredRight);
+   #endif
     if (tweakVisible)
     {
         auto r = Rectangle<float> (28 * s, 88 * s, 444 * s, 290 * s);

@@ -389,7 +389,10 @@ void LedMeter::push (float linearPeak)
     const float db = Decibels::gainToDecibels (linearPeak, -60.0f);
     level = db > level ? db : jmax (db, level - 1.5f);
     if (db >= hold) { hold = db; holdTicks = 45; } else if (--holdTicks <= 0) hold = jmax (-60.0f, hold - 1.0f);
-    repaint();
+    // 24 segments: only redraw when a lit segment or the hold segment actually changes
+    const auto segAt = [] (float d) { return jlimit (-1, 24, (int) std::floor ((d + 60.0f) / 63.0f * 24.0f)); };
+    const int lit = segAt (level + 1.0f), held = segAt (hold);
+    if (lit != drawnLit || held != drawnHold) { drawnLit = lit; drawnHold = held; repaint(); }
 }
 void LedMeter::paint (Graphics& g)
 {
@@ -418,7 +421,17 @@ void NeedleMeter::push (float db)
     const float force = (db - shown) * 0.14f - velocity * 0.45f;
     velocity += force; shown += velocity;
     const float a = angleFor (shown);
-    if (std::abs (a - drawnAngle) > 0.0005f) repaint();      // a resting needle costs nothing
+    if (std::abs (a - drawnAngle) > 0.0005f)                  // a resting needle costs nothing
+        repaint (needleArea (drawnAngle).getUnion (needleArea (a)));   // and a moving one only its sweep
+}
+Rectangle<int> NeedleMeter::needleArea (float angle) const
+{
+    if (angle > 50.0f) return getLocalBounds();               // never drawn yet
+    const auto r = getLocalBounds().toFloat();
+    const auto pivot = Point<float> (r.getCentreX(), r.getBottom() + r.getHeight() * 0.18f);
+    const float R = r.getHeight() * 0.98f;
+    const auto tip = pivot.getPointOnCircumference (R * 0.9f, angle), base = pivot.getPointOnCircumference (R * 0.25f, angle);
+    return Rectangle<float> (tip, base).expanded (6.0f * scale).getSmallestIntegerContainer().getIntersection (getLocalBounds());
 }
 float NeedleMeter::angleFor (float db) const
 {

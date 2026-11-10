@@ -28,13 +28,19 @@ public:
     Spectrum (ExpansionProcessor& p, const Theme& t);
     void tick();
     void paint (juce::Graphics&) override;
+    void resized() override;
     float scale = 1.0f;
 private:
+    void renderStatic (float pixelScale);
+    juce::Image staticLayer;
+    float staticScale = 0.0f;
     void analyse (const std::array<std::atomic<float>, ExpansionProcessor::analyserSize>&, std::vector<float>& smoothed, unsigned w);
     ExpansionProcessor& proc;
     Theme theme;
     static constexpr int order = 12, size = 1 << order, points = 160;
     juce::dsp::FFT fft { order };
     std::vector<float> window, work, inDb, outDb;
+    unsigned lastWrite = ~0u;
+    bool settled = false, drawnOnce = false;
 };
 }

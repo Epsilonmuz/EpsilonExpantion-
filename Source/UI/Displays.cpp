@@ -91,8 +91,9 @@ public:
     void resized() override { meter.scale = scale; meter.setBounds (screen().reduced (16 * scale, 14 * scale).toNearestInt()); }
     void tick() override
     {
-        meter.push (isGr ? proc.reduction.load() : proc.driveLevel.load());
-        repaint();
+        meter.push (isGr ? proc.reduction.load() : proc.driveLevel.load());   // the needle repaints its own sweep
+        const bool lock = isGr && proc.reduction.load() > 6.0f;
+        if (lock != lockShown) { lockShown = lock; repaint(); }
     }
     void paintOverChildren (Graphics& g) override
     {
@@ -105,7 +106,7 @@ public:
         }
     }
 private:
-    bool isGr;
+    bool isGr, lockShown = false;
     NeedleMeter meter;
 };
 
@@ -478,15 +479,26 @@ void Spectrum::analyse (const std::array<std::atomic<float>, ExpansionProcessor:
 void Spectrum::tick()
 {
     const unsigned w = proc.analyserWrite.load (std::memory_order_relaxed);
+    if (w == lastWrite && settled) return;                    // no new audio and the curves have come to rest
+    lastWrite = w;
+    const auto before = outDb, beforeIn = inDb;
     analyse (proc.analyserIn, inDb, w);
     analyse (proc.analyserOut, outDb, w);
-    repaint();
+    float moved = 0;
+    for (size_t i = 0; i < outDb.size(); ++i) moved = jmax (moved, std::abs (outDb[i] - before[i]), std::abs (inDb[i] - beforeIn[i]));
+    settled = moved < 0.05f;
+    if (moved > 0.25f || ! drawnOnce) { drawnOnce = true; repaint(); }
 }
-void Spectrum::paint (Graphics& g)
+void Spectrum::resized() { staticScale = 0.0f; }
+// Grid, frequency labels and legend never change: drawn once into a bitmap at the screen's pixel density.
+void Spectrum::renderStatic (float px)
 {
+    staticScale = px;
+    staticLayer = Image (Image::ARGB, jmax (1, roundToInt ((float) getWidth() * px)), jmax (1, roundToInt ((float) getHeight() * px)), true);
+    Graphics g (staticLayer);
+    g.addTransform (AffineTransform::scale (px));
     auto r = getLocalBounds().toFloat();
     auto plot = r.reduced (12 * scale, 0).withTrimmedTop (24 * scale).withTrimmedBottom (18 * scale);
-    // grid
     g.setFont (font (8.5f * scale, true, 0.1f));
     for (float f : { 50.0f, 100.0f, 200.0f, 500.0f, 1000.0f, 2000.0f, 5000.0f, 10000.0f })
     {
@@ -496,6 +508,23 @@ void Spectrum::paint (Graphics& g)
         g.drawText (f >= 1000 ? String (int (f / 1000)) + "k" : String (int (f)), Rectangle<float> (x - 20 * scale, plot.getBottom() + 3 * scale, 40 * scale, 12 * scale), Justification::centred);
     }
     for (int d = 1; d < 4; ++d) { g.setColour (theme.accent.withAlpha (0.05f)); g.drawHorizontalLine (roundToInt (plot.getY() + plot.getHeight() * float (d) / 4.0f), plot.getX(), plot.getRight()); }
+    g.setFont (font (9.0f * scale, true, 0.22f));
+    auto head = r.reduced (12 * scale, 6 * scale).withHeight (14 * scale);
+    g.setColour (theme.inkDim); g.drawText ("SPECTRUM", head, Justification::left);
+    auto leg = head.removeFromRight (110 * scale);
+    g.setColour (theme.ink.withAlpha (0.4f)); g.fillRect (leg.getX(), leg.getCentreY(), 12 * scale, 1.2f * scale);
+    g.setColour (theme.inkDim); g.drawText ("IN", leg.withTrimmedLeft (16 * scale), Justification::left);
+    g.setColour (theme.accent); g.fillRect (leg.getX() + 48 * scale, leg.getCentreY() - 0.5f * scale, 12 * scale, 2.0f * scale);
+    g.setColour (theme.inkDim); g.drawText ("OUT", leg.withTrimmedLeft (64 * scale), Justification::left);
+}
+void Spectrum::paint (Graphics& g)
+{
+    const float px = jmax (1.0f, g.getInternalContext().getPhysicalPixelScaleFactor());
+    if (! staticLayer.isValid() || std::abs (px - staticScale) > 0.01f) renderStatic (px);
+    g.setImageResamplingQuality (Graphics::lowResamplingQuality);
+    g.drawImage (staticLayer, getLocalBounds().toFloat());
+    auto r = getLocalBounds().toFloat();
+    auto plot = r.reduced (12 * scale, 0).withTrimmedTop (24 * scale).withTrimmedBottom (18 * scale);
     const float top = -6.0f, bottom = -84.0f;
     auto curve = [&] (const std::vector<float>& db, bool close)
     {
@@ -506,7 +535,6 @@ void Spectrum::paint (Graphics& g)
             const float y = jmap (jlimit (bottom, top, db[size_t (i)]), bottom, top, plot.getBottom(), plot.getY());
             if (i == 0) p.startNewSubPath (x, y); else p.lineTo (x, y);
         }
-        p = p.createPathWithRoundedCorners (6.0f * scale);
         if (close) { p.lineTo (plot.getRight(), plot.getBottom()); p.lineTo (plot.getX(), plot.getBottom()); p.closeSubPath(); }
         return p;
     };
@@ -517,16 +545,6 @@ void Spectrum::paint (Graphics& g)
     g.setColour (theme.ink.withAlpha (0.28f));
     g.strokePath (inLine, PathStrokeType (1.0f * scale));
     auto outLine = curve (outDb, false);
-    g.setColour (theme.accent.withAlpha (0.25f)); g.strokePath (outLine, PathStrokeType (4.0f * scale, PathStrokeType::curved, PathStrokeType::rounded));
-    g.setColour (theme.accent.brighter (0.3f)); g.strokePath (outLine, PathStrokeType (1.4f * scale, PathStrokeType::curved, PathStrokeType::rounded));
-    // legend
-    g.setFont (font (9.0f * scale, true, 0.22f));
-    auto head = r.reduced (12 * scale, 6 * scale).withHeight (14 * scale);
-    g.setColour (theme.inkDim); g.drawText ("SPECTRUM", head, Justification::left);
-    auto leg = head.removeFromRight (110 * scale);
-    g.setColour (theme.ink.withAlpha (0.4f)); g.fillRect (leg.getX(), leg.getCentreY(), 12 * scale, 1.2f * scale);
-    g.setColour (theme.inkDim); g.drawText ("IN", leg.withTrimmedLeft (16 * scale), Justification::left);
-    g.setColour (theme.accent); g.fillRect (leg.getX() + 48 * scale, leg.getCentreY() - 0.5f * scale, 12 * scale, 2.0f * scale);
-    g.setColour (theme.inkDim); g.drawText ("OUT", leg.withTrimmedLeft (64 * scale), Justification::left);
+    g.setColour (theme.accent.brighter (0.3f)); g.strokePath (outLine, PathStrokeType (1.6f * scale));
 }
 }

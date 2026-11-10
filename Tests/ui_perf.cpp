@@ -30,27 +30,32 @@ int main()
             ed.setVisible (true);
             juce::Image target (juce::Image::ARGB, ed.getWidth() * 2, ed.getHeight() * 2, true, juce::NativeImageType());
             double phase = 0, total = 0; int frames = 0;
+            auto* cache = dynamic_cast<eps::ui::SoftwareCachedImage*> (ed.getCachedComponentImage());
+            // first draw the whole window once, as opening it would
+            { juce::Graphics g (target); g.addTransform (juce::AffineTransform::scale (2.0f)); if (cache) { cache->paint (g); cache->takePendingArea(); } else ed.paintEntireComponent (g, true); }
+            const bool silent = std::getenv ("EPS_SILENT") != nullptr;
             for (int f = 0; f < 120; ++f)
             {
                 for (int b = 0; b < 3; ++b)
                 {
                     for (int i = 0; i < 512; ++i, phase += 1.0 / 48000)
-                    { const float x = float (0.25 * std::sin (2 * eps::pi * 196 * phase) * std::exp (-4 * std::fmod (phase, 0.5)) + 0.08 * std::sin (2 * eps::pi * 1210 * phase)); audio.setSample (0, i, x); audio.setSample (1, i, x); }
+                    { const float x = silent ? 0.0f : float (0.25 * std::sin (2 * eps::pi * 196 * phase) * std::exp (-4 * std::fmod (phase, 0.5)) + 0.08 * std::sin (2 * eps::pi * 1210 * phase)); audio.setSample (0, i, x); audio.setSample (1, i, x); }
                     proc.processBlock (audio, midi);
                 }
                 const auto t0 = Clock::now();
-                ed.refreshForSnapshot (1);
-                for (auto* c : ed.animatedParts()) if (c && c->isVisible()) if (auto* cache = ed.getCachedComponentImage()) cache->invalidate (c->getBoundsInParent());   // what repaint() does in a window
+                // one 30 fps frame = two 60 Hz editor ticks; each tick's repaints reach the window as
+                // one merged area (macOS merges a window's dirty rectangles), which is then redrawn.
+                for (int tick = 0; tick < 2; ++tick)
                 {
-                    // macOS merges the dirty rectangles of one window into one area (forum.juce.com
-                    // "setNeedsDisplayInRect broken on Sonoma"), so the window is asked to redraw the
-                    // bounding box of everything that changed: from the display down to the meters.
+                    ed.tickForTest();
                     juce::Rectangle<int> area;
-                    for (auto* c : ed.animatedParts()) if (c && c->isVisible()) area = area.isEmpty() ? c->getBoundsInParent() : area.getUnion (c->getBoundsInParent());
+                    if (cache) area = cache->takePendingArea();
+                    else for (auto* c : ed.animatedParts()) if (c && c->isVisible()) area = area.isEmpty() ? c->getBoundsInParent() : area.getUnion (c->getBoundsInParent());
+                    if (area.isEmpty()) continue;
                     juce::Graphics g (target);
                     g.addTransform (juce::AffineTransform::scale (2.0f));
                     g.reduceClipRegion (area);
-                    if (auto* cache = ed.getCachedComponentImage()) cache->paint (g); else ed.paintEntireComponent (g, true);
+                    if (cache) cache->paint (g); else ed.paintEntireComponent (g, true);
                 }
                 if (f >= 20) { total += std::chrono::duration<double, std::milli> (Clock::now() - t0).count(); ++frames; }
             }

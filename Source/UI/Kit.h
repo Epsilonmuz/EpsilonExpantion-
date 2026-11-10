@@ -57,13 +57,17 @@ public:
         g.drawImageTransformed (image, juce::AffineTransform::scale ((float) bounds.getWidth() / (float) image.getWidth(),
                                                                      (float) bounds.getHeight() / (float) image.getHeight()), false);
     }
-    bool invalidateAll() override { valid.clear(); return true; }
-    bool invalidate (const juce::Rectangle<int>& area) override { valid.subtract (area); return true; }
+    bool invalidateAll() override { valid.clear(); pending = owner.getLocalBounds(); return true; }
+    bool invalidate (const juce::Rectangle<int>& area) override { valid.subtract (area); pending = pending.isEmpty() ? area : pending.getUnion (area); return true; }
+    // For the performance tool: the area the window would be asked to redraw (macOS merges a
+    // window's dirty rectangles into one), cleared on read.
+    juce::Rectangle<int> takePendingArea() { auto a = pending; pending = {}; return a; }
     void releaseResources() override { image = {}; valid.clear(); }
 private:
     juce::Component& owner;
     juce::Image image;
     juce::RectangleList<int> valid;
+    juce::Rectangle<int> pending;
 };
 
 // ------------------------------------------------------------------ look and feel
@@ -145,6 +149,7 @@ public:
 private:
     juce::String text; Theme theme;
     float level = -60, hold = -60; int holdTicks = 0;
+    int drawnLit = -1, drawnHold = -1;
 };
 
 // Analog needle meter. Values in dB; 'reverse' makes it a gain-reduction meter (needle falls to the left).
@@ -160,6 +165,7 @@ private:
     juce::String text; Theme theme; float lo, hi; bool rev, cream;
     float shown = -60, velocity = 0, drawnAngle = 100.0f;
     float angleFor (float db) const;
+    juce::Rectangle<int> needleArea (float angle) const;
     void resized() override;
     void renderCache (float pixelScale);
     juce::Image faceImage, glassImage;
