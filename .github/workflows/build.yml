@@ -68,7 +68,10 @@ jobs:
     # One download with all nine: VST3 + AU folders and a double-click installer
     needs: mac
     runs-on: macos-15
+    permissions:
+      contents: write
     steps:
+      - uses: actions/checkout@v4       # the installer scripts and the version number
       - uses: actions/download-artifact@v4
         with:
           pattern: Epsilon*-macOS
@@ -108,3 +111,17 @@ jobs:
           name: Epsilon-Expansion-ALL-macOS
           path: Epsilon-Expansion-macOS.zip
           retention-days: 30
+
+      - name: Installer (puts the VST3, AU and app in the right folders)
+        run: bash .github/scripts/make-mac-installer.sh "Epsilon Expansion" "Epsilon Expansion"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Epsilon-Expansion-macOS-Installer
+          path: installer/*.pkg
+
+      - name: Publish the installer to the "latest" release (main only)
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/publish-latest.sh "Epsilon Expansion" installer/*.pkg

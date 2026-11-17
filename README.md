@@ -2,6 +2,11 @@
 
 Nine creative effects with their own sound and look. Each one has the same set of controls and behaviours as a well-known studio effect. The DSP, names and graphics are all original.
 
+## Install (no build needed)
+
+**Mac (Intel and Apple Silicon):** download [Epsilon Expansion (all nine) for Mac](https://github.com/Epsilonmuz/EpsilonExpantion-/releases/latest/download/Epsilon-Expansion-macOS-Installer.pkg). Double-click it: the VST3 goes to `/Library/Audio/Plug-Ins/VST3`, the Audio Unit to `/Library/Audio/Plug-Ins/Components` and the standalone app to Applications. Then rescan in your DAW (FL Studio: Options > Manage plugins > Find installed plugins). The first time, macOS may say it can't check the installer (it isn't notarised by Apple): click Done, then System Settings > Privacy & Security > **Open Anyway**. No Terminal commands needed. The link always gives the newest build of `main`; it is rebuilt, test-installed on GitHub's Mac and replaced on every push.
+
+
 | Plugin | What it does | Reference behaviour |
 |---|---|---|
 | **Epsilon Heat** | Five-style analog saturation | multi-style saturator with Punish, Thump and Steep |
